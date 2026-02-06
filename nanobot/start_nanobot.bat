@@ -1,0 +1,3 @@
+@echo off
+echo Starting Nanobot...
+python -m nanobot gateway
