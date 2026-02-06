@@ -174,6 +174,8 @@ class Config(BaseSettings):
             return self.providers.zhipu.api_base
         if "vllm" in model:
             return self.providers.vllm.api_base
+        if "openai" in model or "gpt" in model:
+            return self.providers.openai.api_base
         return None
     
     class Config:

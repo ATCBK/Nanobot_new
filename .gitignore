@@ -17,3 +17,7 @@ docs/
 __pycache__/
 poetry.lock
 .pytest_cache/
+
+# Local setup and verification scripts with secrets
+setup_nanobot.py
+verify_siliconflow.py
