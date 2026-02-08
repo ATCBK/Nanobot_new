@@ -13,7 +13,7 @@ from nanobot.agent.tools.base import Tool
 
 # 中文注释
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_2) AppleWebKit/537.36"
-MAX_REDIRECTS = 5  # Limit redirects to prevent DoS attacks
+MAX_REDIRECTS = 5  # 限制重定向次数，防止 DoS 攻击
 
 
 def _strip_tags(text: str) -> str:

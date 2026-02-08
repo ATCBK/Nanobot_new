@@ -16,7 +16,7 @@ from nanobot.config.schema import DiscordConfig
 
 
 DISCORD_API_BASE = "https://discord.com/api/v10"
-MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024  # 20MB
+MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024  # 附件大小上限 20MB
 
 
 class DiscordChannel(BaseChannel):

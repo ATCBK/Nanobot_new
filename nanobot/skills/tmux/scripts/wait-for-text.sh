@@ -59,12 +59,12 @@ if ! command -v tmux >/dev/null 2>&1; then
   exit 1
 fi
 
-# End time in epoch seconds (integer, good enough for polling)
+# 结束时间（epoch 秒，整数精度足够轮询）
 start_epoch=$(date +%s)
 deadline=$((start_epoch + timeout))
 
 while true; do
-  # -J joins wrapped lines, -S uses negative index to read last N lines
+  # -J 合并折行内容，-S 用负索引读取最后 N 行
   pane_text="$(tmux capture-pane -p -J -t "$target" -S "-${lines}" 2>/dev/null || true)"
 
   if printf '%s\n' "$pane_text" | grep $grep_flag -- "$pattern" >/dev/null 2>&1; then

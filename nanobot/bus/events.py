@@ -9,13 +9,13 @@ from typing import Any
 class InboundMessage:
     """类说明：InboundMessage。"""
     
-    channel: str  # telegram, discord, slack, whatsapp
-    sender_id: str  # User identifier
-    chat_id: str  # Chat/channel identifier
-    content: str  # Message text
+    channel: str  # 渠道类型：telegram、discord、slack、whatsapp
+    sender_id: str  # 用户标识
+    chat_id: str  # 会话/频道标识
+    content: str  # 消息文本
     timestamp: datetime = field(default_factory=datetime.now)
-    media: list[str] = field(default_factory=list)  # Media URLs
-    metadata: dict[str, Any] = field(default_factory=dict)  # Channel-specific data
+    media: list[str] = field(default_factory=list)  # 媒体 URL 列表
+    metadata: dict[str, Any] = field(default_factory=dict)  # 渠道特定数据
     
     @property
     def session_key(self) -> str:
@@ -33,5 +33,4 @@ class OutboundMessage:
     reply_to: str | None = None
     media: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
-
 

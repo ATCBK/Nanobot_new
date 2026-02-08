@@ -239,7 +239,7 @@ def gateway(
     heartbeat = HeartbeatService(
         workspace=config.workspace_path,
         on_heartbeat=on_heartbeat,
-        interval_s=30 * 60,  # 30 minutes
+        interval_s=30 * 60,  # 30 分钟
         enabled=True
     )
     
@@ -413,8 +413,8 @@ def _get_bridge_dir() -> Path:
         raise typer.Exit(1)
     
     # 中文注释
-    pkg_bridge = Path(__file__).parent.parent / "bridge"  # nanobot/bridge (installed)
-    src_bridge = Path(__file__).parent.parent.parent / "bridge"  # repo root/bridge (dev)
+    pkg_bridge = Path(__file__).parent.parent / "bridge"  # nanobot/bridge（安装版）
+    src_bridge = Path(__file__).parent.parent.parent / "bridge"  # 仓库根目录/bridge（开发版）
     
     source = None
     if (pkg_bridge / "package.json").exists():

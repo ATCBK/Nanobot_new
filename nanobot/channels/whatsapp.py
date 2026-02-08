@@ -109,7 +109,7 @@ class WhatsAppChannel(BaseChannel):
             
             await self._handle_message(
                 sender_id=chat_id,
-                chat_id=sender,  # Use full JID for replies
+                chat_id=sender,  # 回复时使用完整 JID
                 content=content,
                 metadata={
                     "message_id": data.get("id"),

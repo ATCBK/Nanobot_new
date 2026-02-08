@@ -84,7 +84,7 @@ class TelegramChannel(BaseChannel):
         self.config: TelegramConfig = config
         self.groq_api_key = groq_api_key
         self._app: Application | None = None
-        self._chat_ids: dict[str, int] = {}  # Map sender_id to chat_id for replies
+        self._chat_ids: dict[str, int] = {}  # 将 sender_id 映射到 chat_id 以便回复
     
     async def start(self) -> None:
         """异步函数说明：start。"""
@@ -127,7 +127,7 @@ class TelegramChannel(BaseChannel):
         # 中文注释
         await self._app.updater.start_polling(
             allowed_updates=["message"],
-            drop_pending_updates=True  # Ignore old messages on startup
+            drop_pending_updates=True  # 启动时忽略历史消息
         )
         
         # 中文注释
@@ -217,7 +217,7 @@ class TelegramChannel(BaseChannel):
         media_type = None
         
         if message.photo:
-            media_file = message.photo[-1]  # Largest photo
+            media_file = message.photo[-1]  # 最大尺寸照片
             media_type = "image"
         elif message.voice:
             media_file = message.voice

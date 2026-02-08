@@ -48,7 +48,7 @@ class CronService:
         on_job: Callable[[CronJob], Coroutine[Any, Any, str | None]] | None = None
     ):
         self.store_path = store_path
-        self.on_job = on_job  # Callback to execute job, returns response text
+        self.on_job = on_job  # 执行任务的回调，返回响应文本
         self._store: CronStore | None = None
         self._timer_task: asyncio.Task | None = None
         self._running = False

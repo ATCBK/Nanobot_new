@@ -9,34 +9,34 @@ class WhatsAppConfig(BaseModel):
     """类说明：WhatsAppConfig。"""
     enabled: bool = False
     bridge_url: str = "ws://localhost:3001"
-    allow_from: list[str] = Field(default_factory=list)  # Allowed phone numbers
+    allow_from: list[str] = Field(default_factory=list)  # 允许的手机号
 
 
 class TelegramConfig(BaseModel):
     """类说明：TelegramConfig。"""
     enabled: bool = False
-    token: str = ""  # Bot token from @BotFather
-    allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs or usernames
-    proxy: str | None = None  # HTTP/SOCKS5 proxy URL, e.g. "http://127.0.0.1:7890" or "socks5://127.0.0.1:1080"
+    token: str = ""  # 来自 @BotFather 的机器人令牌
+    allow_from: list[str] = Field(default_factory=list)  # 允许的用户 ID 或用户名
+    proxy: str | None = None  # HTTP/SOCKS5 代理 URL，例如 "http://127.0.0.1:7890" 或 "socks5://127.0.0.1:1080"
 
 
 class FeishuConfig(BaseModel):
     """类说明：FeishuConfig。"""
     enabled: bool = False
-    app_id: str = ""  # App ID from Feishu Open Platform
-    app_secret: str = ""  # App Secret from Feishu Open Platform
-    encrypt_key: str = ""  # Encrypt Key for event subscription (optional)
-    verification_token: str = ""  # Verification Token for event subscription (optional)
-    allow_from: list[str] = Field(default_factory=list)  # Allowed user open_ids
+    app_id: str = ""  # 来自飞书开放平台的 App ID
+    app_secret: str = ""  # 来自飞书开放平台的 App Secret
+    encrypt_key: str = ""  # 事件订阅的 Encrypt Key（可选）
+    verification_token: str = ""  # 事件订阅的 Verification Token（可选）
+    allow_from: list[str] = Field(default_factory=list)  # 允许的用户 open_id
 
 
 class DiscordConfig(BaseModel):
     """类说明：DiscordConfig。"""
     enabled: bool = False
-    token: str = ""  # Bot token from Discord Developer Portal
-    allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs
+    token: str = ""  # 来自 Discord 开发者平台的机器人令牌
+    allow_from: list[str] = Field(default_factory=list)  # 允许的用户 ID
     gateway_url: str = "wss://gateway.discord.gg/?v=10&encoding=json"
-    intents: int = 37377  # GUILDS + GUILD_MESSAGES + DIRECT_MESSAGES + MESSAGE_CONTENT
+    intents: int = 37377  # 需要的 intents：GUILDS + GUILD_MESSAGES + DIRECT_MESSAGES + MESSAGE_CONTENT
 
 
 class ChannelsConfig(BaseModel):
@@ -88,7 +88,7 @@ class GatewayConfig(BaseModel):
 
 class WebSearchConfig(BaseModel):
     """类说明：WebSearchConfig。"""
-    api_key: str = ""  # Brave Search API key
+    api_key: str = ""  # Brave Search API 密钥
     max_results: int = 5
 
 
@@ -106,7 +106,7 @@ class ToolsConfig(BaseModel):
     """类说明：ToolsConfig。"""
     web: WebToolsConfig = Field(default_factory=WebToolsConfig)
     exec: ExecToolConfig = Field(default_factory=ExecToolConfig)
-    restrict_to_workspace: bool = False  # If true, restrict all tool access to workspace directory
+    restrict_to_workspace: bool = False  # 为 true 时，将所有工具访问限制在工作区目录
 
 
 class Config(BaseSettings):

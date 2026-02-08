@@ -15,7 +15,7 @@ from nanobot.utils.helpers import ensure_dir, safe_filename
 class Session:
     """类说明：Session。"""
     
-    key: str  # channel:chat_id
+    key: str  # channel:chat_id（通道:会话ID）
     messages: list[dict[str, Any]] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)

@@ -30,7 +30,7 @@ def _is_heartbeat_empty(content: str | None) -> bool:
         line = line.strip()
         if not line or line.startswith("#") or line.startswith("<!--") or line in skip_patterns:
             continue
-        return False  # Found actionable content
+        return False  # 发现可处理内容
     
     return True
 

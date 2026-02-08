@@ -1,8 +1,4 @@
-﻿"""Agent 主循环模块。
-
-该模块负责把渠道层收到的消息送入 LLM 推理，并在需要时执行工具，
-最终把回复重新发布到消息总线，是 Nanobot 的核心编排层。
-"""
+﻿"""Agent 循环：核心处理引擎。"""
 
 import asyncio
 import json
@@ -55,7 +51,6 @@ class AgentLoop:
         self.bus = bus
         self.provider = provider
         self.workspace = workspace
-        # 如果未显式指定模型，则使用 provider 的默认模型。
         self.model = model or provider.get_default_model()
         self.max_iterations = max_iterations
         self.brave_api_key = brave_api_key
@@ -80,61 +75,58 @@ class AgentLoop:
         self._register_default_tools()
 
     def _register_default_tools(self) -> None:
-        """注册默认工具集。
-
-        - 文件类工具可按配置限制在 workspace 内。
-        - exec/web/message/spawn/cron 按运行能力挂载。
-        """
-        # 文件工具：可选地限制在工作目录内，避免越界读写。
+        """注册默认工具集。"""
+        # 文件工具（按配置决定是否限制在工作区）
         allowed_dir = self.workspace if self.restrict_to_workspace else None
         self.tools.register(ReadFileTool(allowed_dir=allowed_dir))
         self.tools.register(WriteFileTool(allowed_dir=allowed_dir))
         self.tools.register(EditFileTool(allowed_dir=allowed_dir))
         self.tools.register(ListDirTool(allowed_dir=allowed_dir))
 
-        # Shell 工具：统一工作目录和超时策略。
+        # 命令行工具
         self.tools.register(ExecTool(
             working_dir=str(self.workspace),
             timeout=self.exec_config.timeout,
             restrict_to_workspace=self.restrict_to_workspace,
         ))
 
-        # 网络工具：搜索 + 页面抓取。
+        # 网络工具
         self.tools.register(WebSearchTool(api_key=self.brave_api_key))
         self.tools.register(WebFetchTool())
 
-        # 主动消息工具：用于将消息推送回具体渠道。
+        # 消息工具
         message_tool = MessageTool(send_callback=self.bus.publish_outbound)
         self.tools.register(message_tool)
 
-        # 子代理工具：用于派生后台任务。
+        # 子代理启动工具（用于拉起子代理）
         spawn_tool = SpawnTool(manager=self.subagents)
         self.tools.register(spawn_tool)
 
-        # 定时任务工具：仅在 cron 服务存在时可用。
+        # 定时任务工具（用于定时调度）
         if self.cron_service:
             self.tools.register(CronTool(self.cron_service))
 
     async def run(self) -> None:
-        """启动主循环并持续处理入站消息。"""
+        """运行 Agent 循环，从消息总线持续处理消息。"""
         self._running = True
         logger.info("Agent loop started")
 
         while self._running:
             try:
-                # 设定短超时，避免无限阻塞，便于及时响应 stop()。
+                # 等待下一条消息
                 msg = await asyncio.wait_for(
                     self.bus.consume_inbound(),
                     timeout=1.0
                 )
 
+                # 处理消息
                 try:
                     response = await self._process_message(msg)
                     if response:
                         await self.bus.publish_outbound(response)
                 except Exception as e:
                     logger.error(f"Error processing message: {e}")
-                    # 单条消息失败时返回错误提示，但不中断主循环。
+                    # 发送错误响应
                     await self.bus.publish_outbound(OutboundMessage(
                         channel=msg.channel,
                         chat_id=msg.chat_id,
@@ -144,22 +136,31 @@ class AgentLoop:
                 continue
 
     def stop(self) -> None:
-        """请求停止主循环。"""
+        """停止 Agent 循环。"""
         self._running = False
         logger.info("Agent loop stopping")
 
     async def _process_message(self, msg: InboundMessage) -> OutboundMessage | None:
-        """处理单条普通消息并生成回复。"""
-        # system 渠道用于内部事件（如子代理公告），走独立分支。
+        """
+        处理单条入站消息。
+
+        参数：
+            msg: 待处理的入站消息。
+
+        返回：
+            响应消息；如果不需要响应则返回 None。
+        """
+        # 处理系统消息（如子代理公告）
+        # 会话标识中携带原始“通道:会话编号”，用于路由回原会话
         if msg.channel == "system":
             return await self._process_system_message(msg)
 
         logger.info(f"Processing message from {msg.channel}:{msg.sender_id}")
 
-        # 以 channel:chat_id 作为会话键，确保上下文隔离。
+        # 获取或创建会话
         session = self.sessions.get_or_create(msg.session_key)
 
-        # 为可回发消息的工具注入当前会话上下文。
+        # 更新工具上下文
         message_tool = self.tools.get("message")
         if isinstance(message_tool, MessageTool):
             message_tool.set_context(msg.channel, msg.chat_id)
@@ -172,7 +173,7 @@ class AgentLoop:
         if isinstance(cron_tool, CronTool):
             cron_tool.set_context(msg.channel, msg.chat_id)
 
-        # 组装完整输入：系统提示 + 历史 + 当前用户消息。
+        # 构建初始消息（使用历史记录生成模型可用的历史格式）
         messages = self.context.build_messages(
             history=session.get_history(),
             current_message=msg.content,
@@ -181,28 +182,30 @@ class AgentLoop:
             chat_id=msg.chat_id,
         )
 
-        # 迭代式 agent 循环：允许“LLM -> 工具 -> LLM”多轮往返。
+        # 智能体迭代循环
         iteration = 0
         final_content = None
 
         while iteration < self.max_iterations:
             iteration += 1
 
+            # 调用大模型
             response = await self.provider.chat(
                 messages=messages,
                 tools=self.tools.get_definitions(),
                 model=self.model
             )
 
+            # 处理工具调用
             if response.has_tool_calls:
-                # provider 兼容性要求：tool call 参数使用 JSON 字符串格式。
+                # 将包含工具调用的助手消息写入上下文
                 tool_call_dicts = [
                     {
                         "id": tc.id,
                         "type": "function",
                         "function": {
                             "name": tc.name,
-                            "arguments": json.dumps(tc.arguments)
+                            "arguments": json.dumps(tc.arguments)  # 必须是结构化参数字符串
                         }
                     }
                     for tc in response.tool_calls
@@ -211,7 +214,7 @@ class AgentLoop:
                     messages, response.content, tool_call_dicts
                 )
 
-                # 执行模型请求的每个工具，并把结果作为 tool 消息回填。
+                # 执行工具
                 for tool_call in response.tool_calls:
                     args_str = json.dumps(tool_call.arguments)
                     logger.debug(f"Executing tool: {tool_call.name} with arguments: {args_str}")
@@ -220,14 +223,14 @@ class AgentLoop:
                         messages, tool_call.id, tool_call.name, result
                     )
             else:
-                # 无工具调用时，视为最终自然语言回复。
+                # 没有工具调用，结束循环
                 final_content = response.content
                 break
 
         if final_content is None:
             final_content = "I've completed processing but have no response to give."
 
-        # 保存会话，供后续多轮对话复用。
+        # 保存到会话
         session.add_message("user", msg.content)
         session.add_message("assistant", final_content)
         self.sessions.save(session)
@@ -239,23 +242,29 @@ class AgentLoop:
         )
 
     async def _process_system_message(self, msg: InboundMessage) -> OutboundMessage | None:
-        """处理系统消息并路由回原始会话。"""
+        """
+        处理 system 消息（例如子代理公告）。
+
+        chat_id 字段包含 "original_channel:original_chat_id"，用于把响应
+        路由回正确目的地。
+        """
         logger.info(f"Processing system message from {msg.sender_id}")
 
-        # system 消息通过 chat_id 携带原始路由，格式：channel:chat_id
+        # 从会话标识解析来源（格式：“通道:会话编号”）
         if ":" in msg.chat_id:
             parts = msg.chat_id.split(":", 1)
             origin_channel = parts[0]
             origin_chat_id = parts[1]
         else:
-            # 无法解析时回退到 CLI，避免消息丢失。
+            # 回退默认来源
             origin_channel = "cli"
             origin_chat_id = msg.chat_id
 
+        # 使用来源会话作为上下文
         session_key = f"{origin_channel}:{origin_chat_id}"
         session = self.sessions.get_or_create(session_key)
 
-        # 系统消息也需要把工具上下文指向原始会话。
+        # 更新工具上下文
         message_tool = self.tools.get("message")
         if isinstance(message_tool, MessageTool):
             message_tool.set_context(origin_channel, origin_chat_id)
@@ -268,6 +277,7 @@ class AgentLoop:
         if isinstance(cron_tool, CronTool):
             cron_tool.set_context(origin_channel, origin_chat_id)
 
+        # 使用公告内容构建消息
         messages = self.context.build_messages(
             history=session.get_history(),
             current_message=msg.content,
@@ -275,6 +285,7 @@ class AgentLoop:
             chat_id=origin_chat_id,
         )
 
+        # 智能体迭代循环（公告场景下使用）
         iteration = 0
         final_content = None
 
@@ -317,7 +328,7 @@ class AgentLoop:
         if final_content is None:
             final_content = "Background task completed."
 
-        # 在历史中标记系统来源，便于排查由子任务触发的回复。
+        # 保存到会话（在历史中标记为系统消息）
         session.add_message("user", f"[System: {msg.sender_id}] {msg.content}")
         session.add_message("assistant", final_content)
         self.sessions.save(session)
@@ -335,7 +346,18 @@ class AgentLoop:
         channel: str = "cli",
         chat_id: str = "direct",
     ) -> str:
-        """给 CLI/cron 场景使用的直接调用入口。"""
+        """
+        直接处理一条消息（用于 CLI 或 cron 场景）。
+
+        参数：
+            content: 消息内容。
+            session_key: 会话标识。
+            channel: 来源渠道（用于上下文）。
+            chat_id: 来源会话 ID（用于上下文）。
+
+        返回：
+            Agent 的响应文本。
+        """
         msg = InboundMessage(
             channel=channel,
             sender_id="user",

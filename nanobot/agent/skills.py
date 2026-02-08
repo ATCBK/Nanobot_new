@@ -119,7 +119,7 @@ class SkillsLoader:
         meta = self.get_skill_metadata(name)
         if meta and meta.get("description"):
             return meta["description"]
-        return name  # Fallback to skill name
+        return name  # 回退为技能名
     
     def _strip_frontmatter(self, content: str) -> str:
         """函数说明：_strip_frontmatter。"""

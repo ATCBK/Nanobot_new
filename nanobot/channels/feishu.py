@@ -49,7 +49,7 @@ class FeishuChannel(BaseChannel):
         self._client: Any = None
         self._ws_client: Any = None
         self._ws_thread: threading.Thread | None = None
-        self._processed_message_ids: OrderedDict[str, None] = OrderedDict()  # Ordered dedup cache
+        self._processed_message_ids: OrderedDict[str, None] = OrderedDict()  # 有序去重缓存
         self._loop: asyncio.AbstractEventLoop | None = None
     
     async def start(self) -> None:
@@ -212,7 +212,7 @@ class FeishuChannel(BaseChannel):
             
             sender_id = sender.sender_id.open_id if sender.sender_id else "unknown"
             chat_id = message.chat_id
-            chat_type = message.chat_type  # "p2p" or "group"
+            chat_type = message.chat_type  # "p2p" 或 "group"
             msg_type = message.message_type
             
             # 中文注释

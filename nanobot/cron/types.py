@@ -25,8 +25,8 @@ class CronPayload:
     message: str = ""
     # 中文注释
     deliver: bool = False
-    channel: str | None = None  # e.g. "whatsapp"
-    to: str | None = None  # e.g. phone number
+    channel: str | None = None  # 例如："whatsapp"
+    to: str | None = None  # 例如：手机号
 
 
 @dataclass
