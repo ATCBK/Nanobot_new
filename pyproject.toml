@@ -52,7 +52,7 @@ packages = ["nanobot"]
 [tool.hatch.build.targets.wheel.sources]
 "nanobot" = "nanobot"
 
-# Include non-Python files in skills
+#在技​​能中包含非 Python 文件
 [tool.hatch.build]
 include = [
     "nanobot/**/*.py",

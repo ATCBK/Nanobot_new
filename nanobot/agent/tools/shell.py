@@ -1,4 +1,4 @@
-"""Shell execution tool."""
+"""模块说明：shell。"""
 
 import asyncio
 import os
@@ -10,7 +10,7 @@ from nanobot.agent.tools.base import Tool
 
 
 class ExecTool(Tool):
-    """Tool to execute shell commands."""
+    """类说明：ExecTool。"""
     
     def __init__(
         self,
@@ -98,7 +98,7 @@ class ExecTool(Tool):
             
             result = "\n".join(output_parts) if output_parts else "(no output)"
             
-            # Truncate very long output
+            # 中文注释
             max_len = 10000
             if len(result) > max_len:
                 result = result[:max_len] + f"\n... (truncated, {len(result) - max_len} more chars)"
@@ -109,7 +109,7 @@ class ExecTool(Tool):
             return f"Error executing command: {str(e)}"
 
     def _guard_command(self, command: str, cwd: str) -> str | None:
-        """Best-effort safety guard for potentially destructive commands."""
+        """函数说明：_guard_command。"""
         cmd = command.strip()
         lower = cmd.lower()
 

@@ -1,4 +1,4 @@
-"""Channel manager for coordinating chat channels."""
+"""模块说明：manager。"""
 
 import asyncio
 from typing import Any
@@ -12,14 +12,7 @@ from nanobot.config.schema import Config
 
 
 class ChannelManager:
-    """
-    Manages chat channels and coordinates message routing.
-    
-    Responsibilities:
-    - Initialize enabled channels (Telegram, WhatsApp, etc.)
-    - Start/stop channels
-    - Route outbound messages
-    """
+    """类说明：ChannelManager。"""
     
     def __init__(self, config: Config, bus: MessageBus):
         self.config = config
@@ -30,9 +23,9 @@ class ChannelManager:
         self._init_channels()
     
     def _init_channels(self) -> None:
-        """Initialize channels based on config."""
+        """函数说明：_init_channels。"""
         
-        # Telegram channel
+        # 中文注释
         if self.config.channels.telegram.enabled:
             try:
                 from nanobot.channels.telegram import TelegramChannel
@@ -45,7 +38,7 @@ class ChannelManager:
             except ImportError as e:
                 logger.warning(f"Telegram channel not available: {e}")
         
-        # WhatsApp channel
+        # 中文注释
         if self.config.channels.whatsapp.enabled:
             try:
                 from nanobot.channels.whatsapp import WhatsAppChannel
@@ -56,7 +49,7 @@ class ChannelManager:
             except ImportError as e:
                 logger.warning(f"WhatsApp channel not available: {e}")
 
-        # Discord channel
+        # 中文注释
         if self.config.channels.discord.enabled:
             try:
                 from nanobot.channels.discord import DiscordChannel
@@ -67,7 +60,7 @@ class ChannelManager:
             except ImportError as e:
                 logger.warning(f"Discord channel not available: {e}")
         
-        # Feishu channel
+        # 中文注释
         if self.config.channels.feishu.enabled:
             try:
                 from nanobot.channels.feishu import FeishuChannel
@@ -79,28 +72,28 @@ class ChannelManager:
                 logger.warning(f"Feishu channel not available: {e}")
     
     async def start_all(self) -> None:
-        """Start WhatsApp channel and the outbound dispatcher."""
+        """异步函数说明：start_all。"""
         if not self.channels:
             logger.warning("No channels enabled")
             return
         
-        # Start outbound dispatcher
+        # 中文注释
         self._dispatch_task = asyncio.create_task(self._dispatch_outbound())
         
-        # Start WhatsApp channel
+        # 中文注释
         tasks = []
         for name, channel in self.channels.items():
             logger.info(f"Starting {name} channel...")
             tasks.append(asyncio.create_task(channel.start()))
         
-        # Wait for all to complete (they should run forever)
+        # 中文注释
         await asyncio.gather(*tasks, return_exceptions=True)
     
     async def stop_all(self) -> None:
-        """Stop all channels and the dispatcher."""
+        """异步函数说明：stop_all。"""
         logger.info("Stopping all channels...")
         
-        # Stop dispatcher
+        # 中文注释
         if self._dispatch_task:
             self._dispatch_task.cancel()
             try:
@@ -108,7 +101,7 @@ class ChannelManager:
             except asyncio.CancelledError:
                 pass
         
-        # Stop all channels
+        # 中文注释
         for name, channel in self.channels.items():
             try:
                 await channel.stop()
@@ -117,7 +110,7 @@ class ChannelManager:
                 logger.error(f"Error stopping {name}: {e}")
     
     async def _dispatch_outbound(self) -> None:
-        """Dispatch outbound messages to the appropriate channel."""
+        """异步函数说明：_dispatch_outbound。"""
         logger.info("Outbound dispatcher started")
         
         while True:
@@ -142,11 +135,11 @@ class ChannelManager:
                 break
     
     def get_channel(self, name: str) -> BaseChannel | None:
-        """Get a channel by name."""
+        """函数说明：get_channel。"""
         return self.channels.get(name)
     
     def get_status(self) -> dict[str, Any]:
-        """Get status of all channels."""
+        """函数说明：get_status。"""
         return {
             name: {
                 "enabled": True,
@@ -157,5 +150,5 @@ class ChannelManager:
     
     @property
     def enabled_channels(self) -> list[str]:
-        """Get list of enabled channel names."""
+        """函数说明：enabled_channels。"""
         return list(self.channels.keys())

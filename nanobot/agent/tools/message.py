@@ -1,4 +1,4 @@
-"""Message tool for sending messages to users."""
+"""模块说明：message。"""
 
 from typing import Any, Callable, Awaitable
 
@@ -7,7 +7,7 @@ from nanobot.bus.events import OutboundMessage
 
 
 class MessageTool(Tool):
-    """Tool to send messages to users on chat channels."""
+    """类说明：MessageTool。"""
     
     def __init__(
         self, 
@@ -20,12 +20,12 @@ class MessageTool(Tool):
         self._default_chat_id = default_chat_id
     
     def set_context(self, channel: str, chat_id: str) -> None:
-        """Set the current message context."""
+        """函数说明：set_context。"""
         self._default_channel = channel
         self._default_chat_id = chat_id
     
     def set_send_callback(self, callback: Callable[[OutboundMessage], Awaitable[None]]) -> None:
-        """Set the callback for sending messages."""
+        """函数说明：set_send_callback。"""
         self._send_callback = callback
     
     @property

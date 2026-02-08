@@ -1,6 +1,4 @@
-"""
-nanobot - A lightweight AI agent framework
-"""
+"""模块说明：__init__。"""
 
 __version__ = "0.1.0"
 __logo__ = "🐈"

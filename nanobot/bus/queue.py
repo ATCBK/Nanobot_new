@@ -1,4 +1,4 @@
-"""Async message queue for decoupled channel-agent communication."""
+"""模块说明：queue。"""
 
 import asyncio
 from typing import Callable, Awaitable
@@ -9,12 +9,7 @@ from nanobot.bus.events import InboundMessage, OutboundMessage
 
 
 class MessageBus:
-    """
-    Async message bus that decouples chat channels from the agent core.
-    
-    Channels push messages to the inbound queue, and the agent processes
-    them and pushes responses to the outbound queue.
-    """
+    """类说明：MessageBus。"""
     
     def __init__(self):
         self.inbound: asyncio.Queue[InboundMessage] = asyncio.Queue()
@@ -23,19 +18,19 @@ class MessageBus:
         self._running = False
     
     async def publish_inbound(self, msg: InboundMessage) -> None:
-        """Publish a message from a channel to the agent."""
+        """异步函数说明：publish_inbound。"""
         await self.inbound.put(msg)
     
     async def consume_inbound(self) -> InboundMessage:
-        """Consume the next inbound message (blocks until available)."""
+        """异步函数说明：consume_inbound。"""
         return await self.inbound.get()
     
     async def publish_outbound(self, msg: OutboundMessage) -> None:
-        """Publish a response from the agent to channels."""
+        """异步函数说明：publish_outbound。"""
         await self.outbound.put(msg)
     
     async def consume_outbound(self) -> OutboundMessage:
-        """Consume the next outbound message (blocks until available)."""
+        """异步函数说明：consume_outbound。"""
         return await self.outbound.get()
     
     def subscribe_outbound(
@@ -43,16 +38,13 @@ class MessageBus:
         channel: str, 
         callback: Callable[[OutboundMessage], Awaitable[None]]
     ) -> None:
-        """Subscribe to outbound messages for a specific channel."""
+        """函数说明：subscribe_outbound。"""
         if channel not in self._outbound_subscribers:
             self._outbound_subscribers[channel] = []
         self._outbound_subscribers[channel].append(callback)
     
     async def dispatch_outbound(self) -> None:
-        """
-        Dispatch outbound messages to subscribed channels.
-        Run this as a background task.
-        """
+        """异步函数说明：dispatch_outbound。"""
         self._running = True
         while self._running:
             try:
@@ -67,15 +59,15 @@ class MessageBus:
                 continue
     
     def stop(self) -> None:
-        """Stop the dispatcher loop."""
+        """函数说明：stop。"""
         self._running = False
     
     @property
     def inbound_size(self) -> int:
-        """Number of pending inbound messages."""
+        """函数说明：inbound_size。"""
         return self.inbound.qsize()
     
     @property
     def outbound_size(self) -> int:
-        """Number of pending outbound messages."""
+        """函数说明：outbound_size。"""
         return self.outbound.qsize()

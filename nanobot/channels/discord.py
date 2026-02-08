@@ -1,4 +1,4 @@
-"""Discord channel implementation using Discord Gateway websocket."""
+"""模块说明：discord。"""
 
 import asyncio
 import json
@@ -20,7 +20,7 @@ MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024  # 20MB
 
 
 class DiscordChannel(BaseChannel):
-    """Discord channel using Gateway websocket."""
+    """类说明：DiscordChannel。"""
 
     name = "discord"
 
@@ -34,7 +34,7 @@ class DiscordChannel(BaseChannel):
         self._http: httpx.AsyncClient | None = None
 
     async def start(self) -> None:
-        """Start the Discord gateway connection."""
+        """异步函数说明：start。"""
         if not self.config.token:
             logger.error("Discord bot token not configured")
             return
@@ -57,7 +57,7 @@ class DiscordChannel(BaseChannel):
                     await asyncio.sleep(5)
 
     async def stop(self) -> None:
-        """Stop the Discord channel."""
+        """异步函数说明：stop。"""
         self._running = False
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
@@ -73,7 +73,7 @@ class DiscordChannel(BaseChannel):
             self._http = None
 
     async def send(self, msg: OutboundMessage) -> None:
-        """Send a message through Discord REST API."""
+        """异步函数说明：send。"""
         if not self._http:
             logger.warning("Discord HTTP client not initialized")
             return
@@ -108,7 +108,7 @@ class DiscordChannel(BaseChannel):
             await self._stop_typing(msg.chat_id)
 
     async def _gateway_loop(self) -> None:
-        """Main gateway loop: identify, heartbeat, dispatch events."""
+        """异步函数说明：_gateway_loop。"""
         if not self._ws:
             return
 
@@ -128,7 +128,7 @@ class DiscordChannel(BaseChannel):
                 self._seq = seq
 
             if op == 10:
-                # HELLO: start heartbeat and identify
+                # 中文注释
                 interval_ms = payload.get("heartbeat_interval", 45000)
                 await self._start_heartbeat(interval_ms / 1000)
                 await self._identify()
@@ -137,16 +137,16 @@ class DiscordChannel(BaseChannel):
             elif op == 0 and event_type == "MESSAGE_CREATE":
                 await self._handle_message_create(payload)
             elif op == 7:
-                # RECONNECT: exit loop to reconnect
+                # 中文注释
                 logger.info("Discord gateway requested reconnect")
                 break
             elif op == 9:
-                # INVALID_SESSION: reconnect
+                # 中文注释
                 logger.warning("Discord gateway invalid session")
                 break
 
     async def _identify(self) -> None:
-        """Send IDENTIFY payload."""
+        """异步函数说明：_identify。"""
         if not self._ws:
             return
 
@@ -165,7 +165,7 @@ class DiscordChannel(BaseChannel):
         await self._ws.send(json.dumps(identify))
 
     async def _start_heartbeat(self, interval_s: float) -> None:
-        """Start or restart the heartbeat loop."""
+        """异步函数说明：_start_heartbeat。"""
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
 
@@ -182,7 +182,7 @@ class DiscordChannel(BaseChannel):
         self._heartbeat_task = asyncio.create_task(heartbeat_loop())
 
     async def _handle_message_create(self, payload: dict[str, Any]) -> None:
-        """Handle incoming Discord messages."""
+        """异步函数说明：_handle_message_create。"""
         author = payload.get("author") or {}
         if author.get("bot"):
             return
@@ -239,7 +239,7 @@ class DiscordChannel(BaseChannel):
         )
 
     async def _start_typing(self, channel_id: str) -> None:
-        """Start periodic typing indicator for a channel."""
+        """异步函数说明：_start_typing。"""
         await self._stop_typing(channel_id)
 
         async def typing_loop() -> None:
@@ -255,7 +255,7 @@ class DiscordChannel(BaseChannel):
         self._typing_tasks[channel_id] = asyncio.create_task(typing_loop())
 
     async def _stop_typing(self, channel_id: str) -> None:
-        """Stop typing indicator for a channel."""
+        """异步函数说明：_stop_typing。"""
         task = self._typing_tasks.pop(channel_id, None)
         if task:
             task.cancel()

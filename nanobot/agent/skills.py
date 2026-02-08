@@ -1,4 +1,4 @@
-"""Skills loader for agent capabilities."""
+"""模块说明：skills。"""
 
 import json
 import os
@@ -6,17 +6,12 @@ import re
 import shutil
 from pathlib import Path
 
-# Default builtin skills directory (relative to this file)
+# 中文注释
 BUILTIN_SKILLS_DIR = Path(__file__).parent.parent / "skills"
 
 
 class SkillsLoader:
-    """
-    Loader for agent skills.
-    
-    Skills are markdown files (SKILL.md) that teach the agent how to use
-    specific tools or perform certain tasks.
-    """
+    """类说明：SkillsLoader。"""
     
     def __init__(self, workspace: Path, builtin_skills_dir: Path | None = None):
         self.workspace = workspace
@@ -24,18 +19,10 @@ class SkillsLoader:
         self.builtin_skills = builtin_skills_dir or BUILTIN_SKILLS_DIR
     
     def list_skills(self, filter_unavailable: bool = True) -> list[dict[str, str]]:
-        """
-        List all available skills.
-        
-        Args:
-            filter_unavailable: If True, filter out skills with unmet requirements.
-        
-        Returns:
-            List of skill info dicts with 'name', 'path', 'source'.
-        """
+        """函数说明：list_skills。"""
         skills = []
         
-        # Workspace skills (highest priority)
+        # 中文注释
         if self.workspace_skills.exists():
             for skill_dir in self.workspace_skills.iterdir():
                 if skill_dir.is_dir():
@@ -43,7 +30,7 @@ class SkillsLoader:
                     if skill_file.exists():
                         skills.append({"name": skill_dir.name, "path": str(skill_file), "source": "workspace"})
         
-        # Built-in skills
+        # 中文注释
         if self.builtin_skills and self.builtin_skills.exists():
             for skill_dir in self.builtin_skills.iterdir():
                 if skill_dir.is_dir():
@@ -51,27 +38,19 @@ class SkillsLoader:
                     if skill_file.exists() and not any(s["name"] == skill_dir.name for s in skills):
                         skills.append({"name": skill_dir.name, "path": str(skill_file), "source": "builtin"})
         
-        # Filter by requirements
+        # 中文注释
         if filter_unavailable:
             return [s for s in skills if self._check_requirements(self._get_skill_meta(s["name"]))]
         return skills
     
     def load_skill(self, name: str) -> str | None:
-        """
-        Load a skill by name.
-        
-        Args:
-            name: Skill name (directory name).
-        
-        Returns:
-            Skill content or None if not found.
-        """
-        # Check workspace first
+        """函数说明：load_skill。"""
+        # 中文注释
         workspace_skill = self.workspace_skills / name / "SKILL.md"
         if workspace_skill.exists():
             return workspace_skill.read_text(encoding="utf-8")
         
-        # Check built-in
+        # 中文注释
         if self.builtin_skills:
             builtin_skill = self.builtin_skills / name / "SKILL.md"
             if builtin_skill.exists():
@@ -80,15 +59,7 @@ class SkillsLoader:
         return None
     
     def load_skills_for_context(self, skill_names: list[str]) -> str:
-        """
-        Load specific skills for inclusion in agent context.
-        
-        Args:
-            skill_names: List of skill names to load.
-        
-        Returns:
-            Formatted skills content.
-        """
+        """函数说明：load_skills_for_context。"""
         parts = []
         for name in skill_names:
             content = self.load_skill(name)
@@ -99,15 +70,7 @@ class SkillsLoader:
         return "\n\n---\n\n".join(parts) if parts else ""
     
     def build_skills_summary(self) -> str:
-        """
-        Build a summary of all skills (name, description, path, availability).
-        
-        This is used for progressive loading - the agent can read the full
-        skill content using read_file when needed.
-        
-        Returns:
-            XML-formatted skills summary.
-        """
+        """函数说明：build_skills_summary。"""
         all_skills = self.list_skills(filter_unavailable=False)
         if not all_skills:
             return ""
@@ -128,7 +91,7 @@ class SkillsLoader:
             lines.append(f"    <description>{desc}</description>")
             lines.append(f"    <location>{path}</location>")
             
-            # Show missing requirements for unavailable skills
+            # 中文注释
             if not available:
                 missing = self._get_missing_requirements(skill_meta)
                 if missing:
@@ -140,7 +103,7 @@ class SkillsLoader:
         return "\n".join(lines)
     
     def _get_missing_requirements(self, skill_meta: dict) -> str:
-        """Get a description of missing requirements."""
+        """函数说明：_get_missing_requirements。"""
         missing = []
         requires = skill_meta.get("requires", {})
         for b in requires.get("bins", []):
@@ -152,14 +115,14 @@ class SkillsLoader:
         return ", ".join(missing)
     
     def _get_skill_description(self, name: str) -> str:
-        """Get the description of a skill from its frontmatter."""
+        """函数说明：_get_skill_description。"""
         meta = self.get_skill_metadata(name)
         if meta and meta.get("description"):
             return meta["description"]
         return name  # Fallback to skill name
     
     def _strip_frontmatter(self, content: str) -> str:
-        """Remove YAML frontmatter from markdown content."""
+        """函数说明：_strip_frontmatter。"""
         if content.startswith("---"):
             match = re.match(r"^---\n.*?\n---\n", content, re.DOTALL)
             if match:
@@ -167,7 +130,7 @@ class SkillsLoader:
         return content
     
     def _parse_nanobot_metadata(self, raw: str) -> dict:
-        """Parse nanobot metadata JSON from frontmatter."""
+        """函数说明：_parse_nanobot_metadata。"""
         try:
             data = json.loads(raw)
             return data.get("nanobot", {}) if isinstance(data, dict) else {}
@@ -175,7 +138,7 @@ class SkillsLoader:
             return {}
     
     def _check_requirements(self, skill_meta: dict) -> bool:
-        """Check if skill requirements are met (bins, env vars)."""
+        """函数说明：_check_requirements。"""
         requires = skill_meta.get("requires", {})
         for b in requires.get("bins", []):
             if not shutil.which(b):
@@ -186,12 +149,12 @@ class SkillsLoader:
         return True
     
     def _get_skill_meta(self, name: str) -> dict:
-        """Get nanobot metadata for a skill (cached in frontmatter)."""
+        """函数说明：_get_skill_meta。"""
         meta = self.get_skill_metadata(name) or {}
         return self._parse_nanobot_metadata(meta.get("metadata", ""))
     
     def get_always_skills(self) -> list[str]:
-        """Get skills marked as always=true that meet requirements."""
+        """函数说明：get_always_skills。"""
         result = []
         for s in self.list_skills(filter_unavailable=True):
             meta = self.get_skill_metadata(s["name"]) or {}
@@ -201,15 +164,7 @@ class SkillsLoader:
         return result
     
     def get_skill_metadata(self, name: str) -> dict | None:
-        """
-        Get metadata from a skill's frontmatter.
-        
-        Args:
-            name: Skill name.
-        
-        Returns:
-            Metadata dict or None.
-        """
+        """函数说明：get_skill_metadata。"""
         content = self.load_skill(name)
         if not content:
             return None
@@ -217,7 +172,7 @@ class SkillsLoader:
         if content.startswith("---"):
             match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
             if match:
-                # Simple YAML parsing
+                # 中文注释
                 metadata = {}
                 for line in match.group(1).split("\n"):
                     if ":" in line:

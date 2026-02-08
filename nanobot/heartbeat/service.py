@@ -1,4 +1,4 @@
-"""Heartbeat service - periodic agent wake-up to check for tasks."""
+"""模块说明：service。"""
 
 import asyncio
 from pathlib import Path
@@ -6,24 +6,24 @@ from typing import Any, Callable, Coroutine
 
 from loguru import logger
 
-# Default interval: 30 minutes
+# 中文注释
 DEFAULT_HEARTBEAT_INTERVAL_S = 30 * 60
 
-# The prompt sent to agent during heartbeat
+# 中文注释
 HEARTBEAT_PROMPT = """Read HEARTBEAT.md in your workspace (if it exists).
 Follow any instructions or tasks listed there.
 If nothing needs attention, reply with just: HEARTBEAT_OK"""
 
-# Token that indicates "nothing to do"
+# 中文注释
 HEARTBEAT_OK_TOKEN = "HEARTBEAT_OK"
 
 
 def _is_heartbeat_empty(content: str | None) -> bool:
-    """Check if HEARTBEAT.md has no actionable content."""
+    """函数说明：_is_heartbeat_empty。"""
     if not content:
         return True
     
-    # Lines to skip: empty, headers, HTML comments, empty checkboxes
+    # 中文注释
     skip_patterns = {"- [ ]", "* [ ]", "- [x]", "* [x]"}
     
     for line in content.split("\n"):
@@ -36,12 +36,7 @@ def _is_heartbeat_empty(content: str | None) -> bool:
 
 
 class HeartbeatService:
-    """
-    Periodic heartbeat service that wakes the agent to check for tasks.
-    
-    The agent reads HEARTBEAT.md from the workspace and executes any
-    tasks listed there. If nothing needs attention, it replies HEARTBEAT_OK.
-    """
+    """类说明：HeartbeatService。"""
     
     def __init__(
         self,
@@ -62,7 +57,7 @@ class HeartbeatService:
         return self.workspace / "HEARTBEAT.md"
     
     def _read_heartbeat_file(self) -> str | None:
-        """Read HEARTBEAT.md content."""
+        """函数说明：_read_heartbeat_file。"""
         if self.heartbeat_file.exists():
             try:
                 return self.heartbeat_file.read_text()
@@ -71,7 +66,7 @@ class HeartbeatService:
         return None
     
     async def start(self) -> None:
-        """Start the heartbeat service."""
+        """异步函数说明：start。"""
         if not self.enabled:
             logger.info("Heartbeat disabled")
             return
@@ -81,14 +76,14 @@ class HeartbeatService:
         logger.info(f"Heartbeat started (every {self.interval_s}s)")
     
     def stop(self) -> None:
-        """Stop the heartbeat service."""
+        """函数说明：stop。"""
         self._running = False
         if self._task:
             self._task.cancel()
             self._task = None
     
     async def _run_loop(self) -> None:
-        """Main heartbeat loop."""
+        """异步函数说明：_run_loop。"""
         while self._running:
             try:
                 await asyncio.sleep(self.interval_s)
@@ -100,10 +95,10 @@ class HeartbeatService:
                 logger.error(f"Heartbeat error: {e}")
     
     async def _tick(self) -> None:
-        """Execute a single heartbeat tick."""
+        """异步函数说明：_tick。"""
         content = self._read_heartbeat_file()
         
-        # Skip if HEARTBEAT.md is empty or doesn't exist
+        # 中文注释
         if _is_heartbeat_empty(content):
             logger.debug("Heartbeat: no tasks (HEARTBEAT.md empty)")
             return
@@ -114,7 +109,7 @@ class HeartbeatService:
             try:
                 response = await self.on_heartbeat(HEARTBEAT_PROMPT)
                 
-                # Check if agent said "nothing to do"
+                # 中文注释
                 if HEARTBEAT_OK_TOKEN.replace("_", "") in response.upper().replace("_", ""):
                     logger.info("Heartbeat: OK (no action needed)")
                 else:
@@ -124,7 +119,7 @@ class HeartbeatService:
                 logger.error(f"Heartbeat execution failed: {e}")
     
     async def trigger_now(self) -> str | None:
-        """Manually trigger a heartbeat."""
+        """异步函数说明：trigger_now。"""
         if self.on_heartbeat:
             return await self.on_heartbeat(HEARTBEAT_PROMPT)
         return None

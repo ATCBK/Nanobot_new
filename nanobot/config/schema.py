@@ -1,4 +1,4 @@
-"""Configuration schema using Pydantic."""
+"""模块说明：schema。"""
 
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -6,14 +6,14 @@ from pydantic_settings import BaseSettings
 
 
 class WhatsAppConfig(BaseModel):
-    """WhatsApp channel configuration."""
+    """类说明：WhatsAppConfig。"""
     enabled: bool = False
     bridge_url: str = "ws://localhost:3001"
     allow_from: list[str] = Field(default_factory=list)  # Allowed phone numbers
 
 
 class TelegramConfig(BaseModel):
-    """Telegram channel configuration."""
+    """类说明：TelegramConfig。"""
     enabled: bool = False
     token: str = ""  # Bot token from @BotFather
     allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs or usernames
@@ -21,7 +21,7 @@ class TelegramConfig(BaseModel):
 
 
 class FeishuConfig(BaseModel):
-    """Feishu/Lark channel configuration using WebSocket long connection."""
+    """类说明：FeishuConfig。"""
     enabled: bool = False
     app_id: str = ""  # App ID from Feishu Open Platform
     app_secret: str = ""  # App Secret from Feishu Open Platform
@@ -31,7 +31,7 @@ class FeishuConfig(BaseModel):
 
 
 class DiscordConfig(BaseModel):
-    """Discord channel configuration."""
+    """类说明：DiscordConfig。"""
     enabled: bool = False
     token: str = ""  # Bot token from Discord Developer Portal
     allow_from: list[str] = Field(default_factory=list)  # Allowed user IDs
@@ -40,7 +40,7 @@ class DiscordConfig(BaseModel):
 
 
 class ChannelsConfig(BaseModel):
-    """Configuration for chat channels."""
+    """类说明：ChannelsConfig。"""
     whatsapp: WhatsAppConfig = Field(default_factory=WhatsAppConfig)
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     discord: DiscordConfig = Field(default_factory=DiscordConfig)
@@ -48,7 +48,7 @@ class ChannelsConfig(BaseModel):
 
 
 class AgentDefaults(BaseModel):
-    """Default agent configuration."""
+    """类说明：AgentDefaults。"""
     workspace: str = "~/.nanobot/workspace"
     model: str = "anthropic/claude-opus-4-5"
     max_tokens: int = 8192
@@ -57,18 +57,18 @@ class AgentDefaults(BaseModel):
 
 
 class AgentsConfig(BaseModel):
-    """Agent configuration."""
+    """类说明：AgentsConfig。"""
     defaults: AgentDefaults = Field(default_factory=AgentDefaults)
 
 
 class ProviderConfig(BaseModel):
-    """LLM provider configuration."""
+    """类说明：ProviderConfig。"""
     api_key: str = ""
     api_base: str | None = None
 
 
 class ProvidersConfig(BaseModel):
-    """Configuration for LLM providers."""
+    """类说明：ProvidersConfig。"""
     anthropic: ProviderConfig = Field(default_factory=ProviderConfig)
     openai: ProviderConfig = Field(default_factory=ProviderConfig)
     openrouter: ProviderConfig = Field(default_factory=ProviderConfig)
@@ -81,36 +81,36 @@ class ProvidersConfig(BaseModel):
 
 
 class GatewayConfig(BaseModel):
-    """Gateway/server configuration."""
+    """类说明：GatewayConfig。"""
     host: str = "0.0.0.0"
     port: int = 18790
 
 
 class WebSearchConfig(BaseModel):
-    """Web search tool configuration."""
+    """类说明：WebSearchConfig。"""
     api_key: str = ""  # Brave Search API key
     max_results: int = 5
 
 
 class WebToolsConfig(BaseModel):
-    """Web tools configuration."""
+    """类说明：WebToolsConfig。"""
     search: WebSearchConfig = Field(default_factory=WebSearchConfig)
 
 
 class ExecToolConfig(BaseModel):
-    """Shell exec tool configuration."""
+    """类说明：ExecToolConfig。"""
     timeout: int = 60
 
 
 class ToolsConfig(BaseModel):
-    """Tools configuration."""
+    """类说明：ToolsConfig。"""
     web: WebToolsConfig = Field(default_factory=WebToolsConfig)
     exec: ExecToolConfig = Field(default_factory=ExecToolConfig)
     restrict_to_workspace: bool = False  # If true, restrict all tool access to workspace directory
 
 
 class Config(BaseSettings):
-    """Root configuration for nanobot."""
+    """类说明：Config。"""
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
     channels: ChannelsConfig = Field(default_factory=ChannelsConfig)
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
@@ -119,13 +119,13 @@ class Config(BaseSettings):
     
     @property
     def workspace_path(self) -> Path:
-        """Get expanded workspace path."""
+        """函数说明：workspace_path。"""
         return Path(self.agents.defaults.workspace).expanduser()
     
     def _match_provider(self, model: str | None = None) -> ProviderConfig | None:
-        """Match a provider based on model name."""
+        """函数说明：_match_provider。"""
         model = (model or self.agents.defaults.model).lower()
-        # Map of keywords to provider configs
+        # 中文注释
         providers = {
             "openrouter": self.providers.openrouter,
             "deepseek": self.providers.deepseek,
@@ -148,12 +148,12 @@ class Config(BaseSettings):
         return None
 
     def get_api_key(self, model: str | None = None) -> str | None:
-        """Get API key for the given model (or default model). Falls back to first available key."""
-        # Try matching by model name first
+        """函数说明：get_api_key。"""
+        # 中文注释
         matched = self._match_provider(model)
         if matched:
             return matched.api_key
-        # Fallback: return first available key
+        # 中文注释
         for provider in [
             self.providers.openrouter, self.providers.deepseek,
             self.providers.anthropic, self.providers.openai,
@@ -166,7 +166,7 @@ class Config(BaseSettings):
         return None
     
     def get_api_base(self, model: str | None = None) -> str | None:
-        """Get API base URL based on model name."""
+        """函数说明：get_api_base。"""
         model = (model or self.agents.defaults.model).lower()
         if "openrouter" in model:
             return self.providers.openrouter.api_base or "https://openrouter.ai/api/v1"

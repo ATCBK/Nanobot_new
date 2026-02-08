@@ -1,4 +1,4 @@
-"""Cron tool for scheduling reminders and tasks."""
+"""模块说明：cron。"""
 
 from typing import Any
 
@@ -8,7 +8,7 @@ from nanobot.cron.types import CronSchedule
 
 
 class CronTool(Tool):
-    """Tool to schedule reminders and recurring tasks."""
+    """类说明：CronTool。"""
     
     def __init__(self, cron_service: CronService):
         self._cron = cron_service
@@ -16,7 +16,7 @@ class CronTool(Tool):
         self._chat_id = ""
     
     def set_context(self, channel: str, chat_id: str) -> None:
-        """Set the current session context for delivery."""
+        """函数说明：set_context。"""
         self._channel = channel
         self._chat_id = chat_id
     
@@ -81,7 +81,7 @@ class CronTool(Tool):
         if not self._channel or not self._chat_id:
             return "Error: no session context (channel/chat_id)"
         
-        # Build schedule
+        # 中文注释
         if every_seconds:
             schedule = CronSchedule(kind="every", every_ms=every_seconds * 1000)
         elif cron_expr:

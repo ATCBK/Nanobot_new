@@ -1,4 +1,4 @@
-"""Agent core module."""
+"""模块说明：__init__。"""
 
 from nanobot.agent.loop import AgentLoop
 from nanobot.agent.context import ContextBuilder

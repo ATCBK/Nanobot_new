@@ -24,11 +24,11 @@ export class BridgeServer {
   constructor(private port: number, private authDir: string) {}
 
   async start(): Promise<void> {
-    // Create WebSocket server
+    //创建 WebSocket 服务器
     this.wss = new WebSocketServer({ port: this.port });
     console.log(`🌉 Bridge server listening on ws://localhost:${this.port}`);
 
-    // Initialize WhatsApp client
+    //初始化 WhatsApp 客户端
     this.wa = new WhatsAppClient({
       authDir: this.authDir,
       onMessage: (msg) => this.broadcast({ type: 'message', ...msg }),
@@ -36,7 +36,7 @@ export class BridgeServer {
       onStatus: (status) => this.broadcast({ type: 'status', status }),
     });
 
-    // Handle WebSocket connections
+    //处理 WebSocket 连接
     this.wss.on('connection', (ws) => {
       console.log('🔗 Python client connected');
       this.clients.add(ws);
@@ -63,7 +63,7 @@ export class BridgeServer {
       });
     });
 
-    // Connect to WhatsApp
+    //连接到 WhatsApp
     await this.wa.connect();
   }
 
@@ -83,19 +83,19 @@ export class BridgeServer {
   }
 
   async stop(): Promise<void> {
-    // Close all client connections
+    //关闭所有客户端连接
     for (const client of this.clients) {
       client.close();
     }
     this.clients.clear();
 
-    // Close WebSocket server
+    //关闭 WebSocket 服务器
     if (this.wss) {
       this.wss.close();
       this.wss = null;
     }
 
-    // Disconnect WhatsApp
+    //断开 WhatsApp 连接
     if (this.wa) {
       await this.wa.disconnect();
       this.wa = null;

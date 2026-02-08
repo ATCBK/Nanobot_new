@@ -1,4 +1,4 @@
-"""Feishu/Lark channel implementation using lark-oapi SDK with WebSocket long connection."""
+"""模块说明：feishu。"""
 
 import asyncio
 import json
@@ -29,7 +29,7 @@ except ImportError:
     lark = None
     Emoji = None
 
-# Message type display mapping
+# 中文注释
 MSG_TYPE_MAP = {
     "image": "[image]",
     "audio": "[audio]",
@@ -39,16 +39,7 @@ MSG_TYPE_MAP = {
 
 
 class FeishuChannel(BaseChannel):
-    """
-    Feishu/Lark channel using WebSocket long connection.
-    
-    Uses WebSocket to receive events - no public IP or webhook required.
-    
-    Requires:
-    - App ID and App Secret from Feishu Open Platform
-    - Bot capability enabled
-    - Event subscription enabled (im.message.receive_v1)
-    """
+    """类说明：FeishuChannel。"""
     
     name = "feishu"
     
@@ -62,7 +53,7 @@ class FeishuChannel(BaseChannel):
         self._loop: asyncio.AbstractEventLoop | None = None
     
     async def start(self) -> None:
-        """Start the Feishu bot with WebSocket long connection."""
+        """异步函数说明：start。"""
         if not FEISHU_AVAILABLE:
             logger.error("Feishu SDK not installed. Run: pip install lark-oapi")
             return
@@ -74,14 +65,14 @@ class FeishuChannel(BaseChannel):
         self._running = True
         self._loop = asyncio.get_running_loop()
         
-        # Create Lark client for sending messages
+        # 中文注释
         self._client = lark.Client.builder() \
             .app_id(self.config.app_id) \
             .app_secret(self.config.app_secret) \
             .log_level(lark.LogLevel.INFO) \
             .build()
         
-        # Create event handler (only register message receive, ignore other events)
+        # 中文注释
         event_handler = lark.EventDispatcherHandler.builder(
             self.config.encrypt_key or "",
             self.config.verification_token or "",
@@ -89,7 +80,7 @@ class FeishuChannel(BaseChannel):
             self._on_message_sync
         ).build()
         
-        # Create WebSocket client for long connection
+        # 中文注释
         self._ws_client = lark.ws.Client(
             self.config.app_id,
             self.config.app_secret,
@@ -97,7 +88,7 @@ class FeishuChannel(BaseChannel):
             log_level=lark.LogLevel.INFO
         )
         
-        # Start WebSocket client in a separate thread
+        # 中文注释
         def run_ws():
             try:
                 self._ws_client.start()
@@ -110,12 +101,12 @@ class FeishuChannel(BaseChannel):
         logger.info("Feishu bot started with WebSocket long connection")
         logger.info("No public IP required - using WebSocket to receive events")
         
-        # Keep running until stopped
+        # 中文注释
         while self._running:
             await asyncio.sleep(1)
     
     async def stop(self) -> None:
-        """Stop the Feishu bot."""
+        """异步函数说明：stop。"""
         self._running = False
         if self._ws_client:
             try:
@@ -125,7 +116,7 @@ class FeishuChannel(BaseChannel):
         logger.info("Feishu bot stopped")
     
     def _add_reaction_sync(self, message_id: str, emoji_type: str) -> None:
-        """Sync helper for adding reaction (runs in thread pool)."""
+        """函数说明：_add_reaction_sync。"""
         try:
             request = CreateMessageReactionRequest.builder() \
                 .message_id(message_id) \
@@ -145,11 +136,7 @@ class FeishuChannel(BaseChannel):
             logger.warning(f"Error adding reaction: {e}")
 
     async def _add_reaction(self, message_id: str, emoji_type: str = "THUMBSUP") -> None:
-        """
-        Add a reaction emoji to a message (non-blocking).
-        
-        Common emoji types: THUMBSUP, OK, EYES, DONE, OnIt, HEART
-        """
+        """异步函数说明：_add_reaction。"""
         if not self._client or not Emoji:
             return
         
@@ -157,20 +144,20 @@ class FeishuChannel(BaseChannel):
         await loop.run_in_executor(None, self._add_reaction_sync, message_id, emoji_type)
     
     async def send(self, msg: OutboundMessage) -> None:
-        """Send a message through Feishu."""
+        """异步函数说明：send。"""
         if not self._client:
             logger.warning("Feishu client not initialized")
             return
         
         try:
-            # Determine receive_id_type based on chat_id format
-            # open_id starts with "ou_", chat_id starts with "oc_"
+            # 中文注释
+            # 中文注释
             if msg.chat_id.startswith("oc_"):
                 receive_id_type = "chat_id"
             else:
                 receive_id_type = "open_id"
             
-            # Build text message content
+            # 中文注释
             content = json.dumps({"text": msg.content})
             
             request = CreateMessageRequest.builder() \
@@ -197,31 +184,28 @@ class FeishuChannel(BaseChannel):
             logger.error(f"Error sending Feishu message: {e}")
     
     def _on_message_sync(self, data: "P2ImMessageReceiveV1") -> None:
-        """
-        Sync handler for incoming messages (called from WebSocket thread).
-        Schedules async handling in the main event loop.
-        """
+        """函数说明：_on_message_sync。"""
         if self._loop and self._loop.is_running():
             asyncio.run_coroutine_threadsafe(self._on_message(data), self._loop)
     
     async def _on_message(self, data: "P2ImMessageReceiveV1") -> None:
-        """Handle incoming message from Feishu."""
+        """异步函数说明：_on_message。"""
         try:
             event = data.event
             message = event.message
             sender = event.sender
             
-            # Deduplication check
+            # 中文注释
             message_id = message.message_id
             if message_id in self._processed_message_ids:
                 return
             self._processed_message_ids[message_id] = None
             
-            # Trim cache: keep most recent 500 when exceeds 1000
+            # 中文注释
             while len(self._processed_message_ids) > 1000:
                 self._processed_message_ids.popitem(last=False)
             
-            # Skip bot messages
+            # 中文注释
             sender_type = sender.sender_type
             if sender_type == "bot":
                 return
@@ -231,10 +215,10 @@ class FeishuChannel(BaseChannel):
             chat_type = message.chat_type  # "p2p" or "group"
             msg_type = message.message_type
             
-            # Add reaction to indicate "seen"
+            # 中文注释
             await self._add_reaction(message_id, "THUMBSUP")
             
-            # Parse message content
+            # 中文注释
             if msg_type == "text":
                 try:
                     content = json.loads(message.content).get("text", "")
@@ -246,7 +230,7 @@ class FeishuChannel(BaseChannel):
             if not content:
                 return
             
-            # Forward to message bus
+            # 中文注释
             reply_to = chat_id if chat_type == "group" else sender_id
             await self._handle_message(
                 sender_id=sender_id,

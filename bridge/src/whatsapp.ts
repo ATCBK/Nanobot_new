@@ -48,7 +48,7 @@ export class WhatsAppClient {
 
     console.log(`Using Baileys version: ${version.join('.')}`);
 
-    // Create socket following OpenClaw's pattern
+    //按照 OpenClaw 的模式创建套接字
     this.sock = makeWASocket({
       auth: {
         creds: state.creds,
@@ -62,19 +62,19 @@ export class WhatsAppClient {
       markOnlineOnConnect: false,
     });
 
-    // Handle WebSocket errors
+    //处理 WebSocket 错误
     if (this.sock.ws && typeof this.sock.ws.on === 'function') {
       this.sock.ws.on('error', (err: Error) => {
         console.error('WebSocket error:', err.message);
       });
     }
 
-    // Handle connection updates
+    //处理连接更新
     this.sock.ev.on('connection.update', async (update: any) => {
       const { connection, lastDisconnect, qr } = update;
 
       if (qr) {
-        // Display QR code in terminal
+        //在终端中显示二维码
         console.log('\n📱 Scan this QR code with WhatsApp (Linked Devices):\n');
         qrcode.generate(qr, { small: true });
         this.options.onQR(qr);
@@ -101,18 +101,18 @@ export class WhatsAppClient {
       }
     });
 
-    // Save credentials on update
+    //更新时保存凭据
     this.sock.ev.on('creds.update', saveCreds);
 
-    // Handle incoming messages
+    //处理传入消息
     this.sock.ev.on('messages.upsert', async ({ messages, type }: { messages: any[]; type: string }) => {
       if (type !== 'notify') return;
 
       for (const msg of messages) {
-        // Skip own messages
+        //跳过自己的消息
         if (msg.key.fromMe) continue;
 
-        // Skip status updates
+        //跳过状态更新
         if (msg.key.remoteJid === 'status@broadcast') continue;
 
         const content = this.extractMessageContent(msg);
@@ -135,32 +135,32 @@ export class WhatsAppClient {
     const message = msg.message;
     if (!message) return null;
 
-    // Text message
+    //短信
     if (message.conversation) {
       return message.conversation;
     }
 
-    // Extended text (reply, link preview)
+    //扩展文本（回复、链接预览）
     if (message.extendedTextMessage?.text) {
       return message.extendedTextMessage.text;
     }
 
-    // Image with caption
+    //带标题的图像
     if (message.imageMessage?.caption) {
       return `[Image] ${message.imageMessage.caption}`;
     }
 
-    // Video with caption
+    //带标题的视频
     if (message.videoMessage?.caption) {
       return `[Video] ${message.videoMessage.caption}`;
     }
 
-    // Document with caption
+    //带标题的文档
     if (message.documentMessage?.caption) {
       return `[Document] ${message.documentMessage.caption}`;
     }
 
-    // Voice/Audio message
+    //语音/音频消息
     if (message.audioMessage) {
       return `[Voice Message]`;
     }

@@ -1,4 +1,4 @@
-"""Event types for the message bus."""
+"""模块说明：events。"""
 
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -7,7 +7,7 @@ from typing import Any
 
 @dataclass
 class InboundMessage:
-    """Message received from a chat channel."""
+    """类说明：InboundMessage。"""
     
     channel: str  # telegram, discord, slack, whatsapp
     sender_id: str  # User identifier
@@ -19,13 +19,13 @@ class InboundMessage:
     
     @property
     def session_key(self) -> str:
-        """Unique key for session identification."""
+        """函数说明：session_key。"""
         return f"{self.channel}:{self.chat_id}"
 
 
 @dataclass
 class OutboundMessage:
-    """Message to send to a chat channel."""
+    """类说明：OutboundMessage。"""
     
     channel: str
     chat_id: str

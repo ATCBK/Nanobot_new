@@ -1,4 +1,4 @@
-"""File system tools: read, write, edit."""
+"""模块说明：filesystem。"""
 
 from pathlib import Path
 from typing import Any
@@ -7,7 +7,7 @@ from nanobot.agent.tools.base import Tool
 
 
 def _resolve_path(path: str, allowed_dir: Path | None = None) -> Path:
-    """Resolve path and optionally enforce directory restriction."""
+    """函数说明：_resolve_path。"""
     resolved = Path(path).expanduser().resolve()
     if allowed_dir and not str(resolved).startswith(str(allowed_dir.resolve())):
         raise PermissionError(f"Path {path} is outside allowed directory {allowed_dir}")
@@ -15,7 +15,7 @@ def _resolve_path(path: str, allowed_dir: Path | None = None) -> Path:
 
 
 class ReadFileTool(Tool):
-    """Tool to read file contents."""
+    """类说明：ReadFileTool。"""
     
     def __init__(self, allowed_dir: Path | None = None):
         self._allowed_dir = allowed_dir
@@ -58,7 +58,7 @@ class ReadFileTool(Tool):
 
 
 class WriteFileTool(Tool):
-    """Tool to write content to a file."""
+    """类说明：WriteFileTool。"""
     
     def __init__(self, allowed_dir: Path | None = None):
         self._allowed_dir = allowed_dir
@@ -101,7 +101,7 @@ class WriteFileTool(Tool):
 
 
 class EditFileTool(Tool):
-    """Tool to edit a file by replacing text."""
+    """类说明：EditFileTool。"""
     
     def __init__(self, allowed_dir: Path | None = None):
         self._allowed_dir = allowed_dir
@@ -146,7 +146,7 @@ class EditFileTool(Tool):
             if old_text not in content:
                 return f"Error: old_text not found in file. Make sure it matches exactly."
             
-            # Count occurrences
+            # 中文注释
             count = content.count(old_text)
             if count > 1:
                 return f"Warning: old_text appears {count} times. Please provide more context to make it unique."
@@ -162,7 +162,7 @@ class EditFileTool(Tool):
 
 
 class ListDirTool(Tool):
-    """Tool to list directory contents."""
+    """类说明：ListDirTool。"""
     
     def __init__(self, allowed_dir: Path | None = None):
         self._allowed_dir = allowed_dir

@@ -47,7 +47,7 @@ else
     exit 1
 fi
 
-# Cleanup
+#清理
 echo ""
 echo "=== Cleanup ==="
 docker rm -f nanobot-test-run 2>/dev/null || true

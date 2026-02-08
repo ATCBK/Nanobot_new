@@ -1,4 +1,4 @@
-"""Session management for conversation history."""
+"""模块说明：manager。"""
 
 import json
 from pathlib import Path
@@ -13,11 +13,7 @@ from nanobot.utils.helpers import ensure_dir, safe_filename
 
 @dataclass
 class Session:
-    """
-    A conversation session.
-    
-    Stores messages in JSONL format for easy reading and persistence.
-    """
+    """类说明：Session。"""
     
     key: str  # channel:chat_id
     messages: list[dict[str, Any]] = field(default_factory=list)
@@ -26,7 +22,7 @@ class Session:
     metadata: dict[str, Any] = field(default_factory=dict)
     
     def add_message(self, role: str, content: str, **kwargs: Any) -> None:
-        """Add a message to the session."""
+        """函数说明：add_message。"""
         msg = {
             "role": role,
             "content": content,
@@ -37,33 +33,21 @@ class Session:
         self.updated_at = datetime.now()
     
     def get_history(self, max_messages: int = 50) -> list[dict[str, Any]]:
-        """
-        Get message history for LLM context.
-        
-        Args:
-            max_messages: Maximum messages to return.
-        
-        Returns:
-            List of messages in LLM format.
-        """
-        # Get recent messages
+        """函数说明：get_history。"""
+        # 中文注释
         recent = self.messages[-max_messages:] if len(self.messages) > max_messages else self.messages
         
-        # Convert to LLM format (just role and content)
+        # 中文注释
         return [{"role": m["role"], "content": m["content"]} for m in recent]
     
     def clear(self) -> None:
-        """Clear all messages in the session."""
+        """函数说明：clear。"""
         self.messages = []
         self.updated_at = datetime.now()
 
 
 class SessionManager:
-    """
-    Manages conversation sessions.
-    
-    Sessions are stored as JSONL files in the sessions directory.
-    """
+    """类说明：SessionManager。"""
     
     def __init__(self, workspace: Path):
         self.workspace = workspace
@@ -71,25 +55,17 @@ class SessionManager:
         self._cache: dict[str, Session] = {}
     
     def _get_session_path(self, key: str) -> Path:
-        """Get the file path for a session."""
+        """函数说明：_get_session_path。"""
         safe_key = safe_filename(key.replace(":", "_"))
         return self.sessions_dir / f"{safe_key}.jsonl"
     
     def get_or_create(self, key: str) -> Session:
-        """
-        Get an existing session or create a new one.
-        
-        Args:
-            key: Session key (usually channel:chat_id).
-        
-        Returns:
-            The session.
-        """
-        # Check cache
+        """函数说明：get_or_create。"""
+        # 中文注释
         if key in self._cache:
             return self._cache[key]
         
-        # Try to load from disk
+        # 中文注释
         session = self._load(key)
         if session is None:
             session = Session(key=key)
@@ -98,7 +74,7 @@ class SessionManager:
         return session
     
     def _load(self, key: str) -> Session | None:
-        """Load a session from disk."""
+        """函数说明：_load。"""
         path = self._get_session_path(key)
         
         if not path.exists():
@@ -134,11 +110,11 @@ class SessionManager:
             return None
     
     def save(self, session: Session) -> None:
-        """Save a session to disk."""
+        """函数说明：save。"""
         path = self._get_session_path(session.key)
         
         with open(path, "w") as f:
-            # Write metadata first
+            # 中文注释
             metadata_line = {
                 "_type": "metadata",
                 "created_at": session.created_at.isoformat(),
@@ -147,26 +123,18 @@ class SessionManager:
             }
             f.write(json.dumps(metadata_line) + "\n")
             
-            # Write messages
+            # 中文注释
             for msg in session.messages:
                 f.write(json.dumps(msg) + "\n")
         
         self._cache[session.key] = session
     
     def delete(self, key: str) -> bool:
-        """
-        Delete a session.
-        
-        Args:
-            key: Session key.
-        
-        Returns:
-            True if deleted, False if not found.
-        """
-        # Remove from cache
+        """函数说明：delete。"""
+        # 中文注释
         self._cache.pop(key, None)
         
-        # Remove file
+        # 中文注释
         path = self._get_session_path(key)
         if path.exists():
             path.unlink()
@@ -174,17 +142,12 @@ class SessionManager:
         return False
     
     def list_sessions(self) -> list[dict[str, Any]]:
-        """
-        List all sessions.
-        
-        Returns:
-            List of session info dicts.
-        """
+        """函数说明：list_sessions。"""
         sessions = []
         
         for path in self.sessions_dir.glob("*.jsonl"):
             try:
-                # Read just the metadata line
+                # 中文注释
                 with open(path) as f:
                     first_line = f.readline().strip()
                     if first_line:

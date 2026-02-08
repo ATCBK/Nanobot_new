@@ -1,4 +1,4 @@
-"""Memory system for persistent agent memory."""
+"""模块说明：memory。"""
 
 from pathlib import Path
 from datetime import datetime
@@ -7,11 +7,7 @@ from nanobot.utils.helpers import ensure_dir, today_date
 
 
 class MemoryStore:
-    """
-    Memory system for the agent.
-    
-    Supports daily notes (memory/YYYY-MM-DD.md) and long-term memory (MEMORY.md).
-    """
+    """类说明：MemoryStore。"""
     
     def __init__(self, workspace: Path):
         self.workspace = workspace
@@ -19,50 +15,42 @@ class MemoryStore:
         self.memory_file = self.memory_dir / "MEMORY.md"
     
     def get_today_file(self) -> Path:
-        """Get path to today's memory file."""
+        """函数说明：get_today_file。"""
         return self.memory_dir / f"{today_date()}.md"
     
     def read_today(self) -> str:
-        """Read today's memory notes."""
+        """函数说明：read_today。"""
         today_file = self.get_today_file()
         if today_file.exists():
             return today_file.read_text(encoding="utf-8")
         return ""
     
     def append_today(self, content: str) -> None:
-        """Append content to today's memory notes."""
+        """函数说明：append_today。"""
         today_file = self.get_today_file()
         
         if today_file.exists():
             existing = today_file.read_text(encoding="utf-8")
             content = existing + "\n" + content
         else:
-            # Add header for new day
+            # 中文注释
             header = f"# {today_date()}\n\n"
             content = header + content
         
         today_file.write_text(content, encoding="utf-8")
     
     def read_long_term(self) -> str:
-        """Read long-term memory (MEMORY.md)."""
+        """函数说明：read_long_term。"""
         if self.memory_file.exists():
             return self.memory_file.read_text(encoding="utf-8")
         return ""
     
     def write_long_term(self, content: str) -> None:
-        """Write to long-term memory (MEMORY.md)."""
+        """函数说明：write_long_term。"""
         self.memory_file.write_text(content, encoding="utf-8")
     
     def get_recent_memories(self, days: int = 7) -> str:
-        """
-        Get memories from the last N days.
-        
-        Args:
-            days: Number of days to look back.
-        
-        Returns:
-            Combined memory content.
-        """
+        """函数说明：get_recent_memories。"""
         from datetime import timedelta
         
         memories = []
@@ -80,7 +68,7 @@ class MemoryStore:
         return "\n\n---\n\n".join(memories)
     
     def list_memory_files(self) -> list[Path]:
-        """List all memory files sorted by date (newest first)."""
+        """函数说明：list_memory_files。"""
         if not self.memory_dir.exists():
             return []
         
@@ -88,20 +76,15 @@ class MemoryStore:
         return sorted(files, reverse=True)
     
     def get_memory_context(self) -> str:
-        """
-        Get memory context for the agent.
-        
-        Returns:
-            Formatted memory context including long-term and recent memories.
-        """
+        """函数说明：get_memory_context。"""
         parts = []
         
-        # Long-term memory
+        # 中文注释
         long_term = self.read_long_term()
         if long_term:
             parts.append("## Long-term Memory\n" + long_term)
         
-        # Today's notes
+        # 中文注释
         today = self.read_today()
         if today:
             parts.append("## Today's Notes\n" + today)

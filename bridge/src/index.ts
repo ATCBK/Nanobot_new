@@ -13,7 +13,7 @@
  *   BRIDGE_PORT=3001 AUTH_DIR=~/.nanobot/whatsapp npm start
  */
 
-// Polyfill crypto for Baileys in ESM
+//ESM 中百利甜酒的 Polyfill 加密
 import { webcrypto } from 'crypto';
 if (!globalThis.crypto) {
   (globalThis as any).crypto = webcrypto;
@@ -31,7 +31,7 @@ console.log('========================\n');
 
 const server = new BridgeServer(PORT, AUTH_DIR);
 
-// Handle graceful shutdown
+//处理正常关闭
 process.on('SIGINT', async () => {
   console.log('\n\nShutting down...');
   await server.stop();
@@ -43,7 +43,7 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-// Start the server
+//启动服务器
 server.start().catch((error) => {
   console.error('Failed to start bridge:', error);
   process.exit(1);

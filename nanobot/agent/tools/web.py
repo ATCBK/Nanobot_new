@@ -1,4 +1,4 @@
-"""Web tools: web_search and web_fetch."""
+"""模块说明：web。"""
 
 import html
 import json
@@ -11,13 +11,13 @@ import httpx
 
 from nanobot.agent.tools.base import Tool
 
-# Shared constants
+# 中文注释
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_2) AppleWebKit/537.36"
 MAX_REDIRECTS = 5  # Limit redirects to prevent DoS attacks
 
 
 def _strip_tags(text: str) -> str:
-    """Remove HTML tags and decode entities."""
+    """函数说明：_strip_tags。"""
     text = re.sub(r'<script[\s\S]*?</script>', '', text, flags=re.I)
     text = re.sub(r'<style[\s\S]*?</style>', '', text, flags=re.I)
     text = re.sub(r'<[^>]+>', '', text)
@@ -25,13 +25,13 @@ def _strip_tags(text: str) -> str:
 
 
 def _normalize(text: str) -> str:
-    """Normalize whitespace."""
+    """函数说明：_normalize。"""
     text = re.sub(r'[ \t]+', ' ', text)
     return re.sub(r'\n{3,}', '\n\n', text).strip()
 
 
 def _validate_url(url: str) -> tuple[bool, str]:
-    """Validate URL: must be http(s) with valid domain."""
+    """函数说明：_validate_url。"""
     try:
         p = urlparse(url)
         if p.scheme not in ('http', 'https'):
@@ -44,7 +44,7 @@ def _validate_url(url: str) -> tuple[bool, str]:
 
 
 class WebSearchTool(Tool):
-    """Search the web using Brave Search API."""
+    """类说明：WebSearchTool。"""
     
     name = "web_search"
     description = "Search the web. Returns titles, URLs, and snippets."
@@ -91,7 +91,7 @@ class WebSearchTool(Tool):
 
 
 class WebFetchTool(Tool):
-    """Fetch and extract content from a URL using Readability."""
+    """类说明：WebFetchTool。"""
     
     name = "web_fetch"
     description = "Fetch URL and extract readable content (HTML → markdown/text)."
@@ -113,7 +113,7 @@ class WebFetchTool(Tool):
 
         max_chars = maxChars or self.max_chars
 
-        # Validate URL before fetching
+        # 中文注释
         is_valid, error_msg = _validate_url(url)
         if not is_valid:
             return json.dumps({"error": f"URL validation failed: {error_msg}", "url": url})
@@ -129,10 +129,10 @@ class WebFetchTool(Tool):
             
             ctype = r.headers.get("content-type", "")
             
-            # JSON
+            # 中文注释
             if "application/json" in ctype:
                 text, extractor = json.dumps(r.json(), indent=2), "json"
-            # HTML
+            # 中文注释
             elif "text/html" in ctype or r.text[:256].lower().startswith(("<!doctype", "<html")):
                 doc = Document(r.text)
                 content = self._to_markdown(doc.summary()) if extractMode == "markdown" else _strip_tags(doc.summary())
@@ -151,8 +151,8 @@ class WebFetchTool(Tool):
             return json.dumps({"error": str(e), "url": url})
     
     def _to_markdown(self, html: str) -> str:
-        """Convert HTML to markdown."""
-        # Convert links, headings, lists before stripping tags
+        """函数说明：_to_markdown。"""
+        # 中文注释
         text = re.sub(r'<a\s+[^>]*href=["\']([^"\']+)["\'][^>]*>([\s\S]*?)</a>',
                       lambda m: f'[{_strip_tags(m[2])}]({m[1]})', html, flags=re.I)
         text = re.sub(r'<h([1-6])[^>]*>([\s\S]*?)</h\1>',

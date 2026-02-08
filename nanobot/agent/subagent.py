@@ -1,4 +1,4 @@
-"""Subagent manager for background task execution."""
+"""模块说明：subagent。"""
 
 import asyncio
 import json
@@ -18,13 +18,7 @@ from nanobot.agent.tools.web import WebSearchTool, WebFetchTool
 
 
 class SubagentManager:
-    """
-    Manages background subagent execution.
-    
-    Subagents are lightweight agent instances that run in the background
-    to handle specific tasks. They share the same LLM provider but have
-    isolated context and a focused system prompt.
-    """
+    """类说明：SubagentManager。"""
     
     def __init__(
         self,
@@ -53,18 +47,7 @@ class SubagentManager:
         origin_channel: str = "cli",
         origin_chat_id: str = "direct",
     ) -> str:
-        """
-        Spawn a subagent to execute a task in the background.
-        
-        Args:
-            task: The task description for the subagent.
-            label: Optional human-readable label for the task.
-            origin_channel: The channel to announce results to.
-            origin_chat_id: The chat ID to announce results to.
-        
-        Returns:
-            Status message indicating the subagent was started.
-        """
+        """异步函数说明：spawn。"""
         task_id = str(uuid.uuid4())[:8]
         display_label = label or task[:30] + ("..." if len(task) > 30 else "")
         
@@ -73,13 +56,13 @@ class SubagentManager:
             "chat_id": origin_chat_id,
         }
         
-        # Create background task
+        # 中文注释
         bg_task = asyncio.create_task(
             self._run_subagent(task_id, task, display_label, origin)
         )
         self._running_tasks[task_id] = bg_task
         
-        # Cleanup when done
+        # 中文注释
         bg_task.add_done_callback(lambda _: self._running_tasks.pop(task_id, None))
         
         logger.info(f"Spawned subagent [{task_id}]: {display_label}")
@@ -92,11 +75,11 @@ class SubagentManager:
         label: str,
         origin: dict[str, str],
     ) -> None:
-        """Execute the subagent task and announce the result."""
+        """异步函数说明：_run_subagent。"""
         logger.info(f"Subagent [{task_id}] starting task: {label}")
         
         try:
-            # Build subagent tools (no message tool, no spawn tool)
+            # 中文注释
             tools = ToolRegistry()
             allowed_dir = self.workspace if self.restrict_to_workspace else None
             tools.register(ReadFileTool(allowed_dir=allowed_dir))
@@ -110,14 +93,14 @@ class SubagentManager:
             tools.register(WebSearchTool(api_key=self.brave_api_key))
             tools.register(WebFetchTool())
             
-            # Build messages with subagent-specific prompt
+            # 中文注释
             system_prompt = self._build_subagent_prompt(task)
             messages: list[dict[str, Any]] = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": task},
             ]
             
-            # Run agent loop (limited iterations)
+            # 中文注释
             max_iterations = 15
             iteration = 0
             final_result: str | None = None
@@ -132,7 +115,7 @@ class SubagentManager:
                 )
                 
                 if response.has_tool_calls:
-                    # Add assistant message with tool calls
+                    # 中文注释
                     tool_call_dicts = [
                         {
                             "id": tc.id,
@@ -150,7 +133,7 @@ class SubagentManager:
                         "tool_calls": tool_call_dicts,
                     })
                     
-                    # Execute tools
+                    # 中文注释
                     for tool_call in response.tool_calls:
                         args_str = json.dumps(tool_call.arguments)
                         logger.debug(f"Subagent [{task_id}] executing: {tool_call.name} with arguments: {args_str}")
@@ -185,7 +168,7 @@ class SubagentManager:
         origin: dict[str, str],
         status: str,
     ) -> None:
-        """Announce the subagent result to the main agent via the message bus."""
+        """异步函数说明：_announce_result。"""
         status_text = "completed successfully" if status == "ok" else "failed"
         
         announce_content = f"""[Subagent '{label}' {status_text}]
@@ -197,7 +180,7 @@ Result:
 
 Summarize this naturally for the user. Keep it brief (1-2 sentences). Do not mention technical details like "subagent" or task IDs."""
         
-        # Inject as system message to trigger main agent
+        # 中文注释
         msg = InboundMessage(
             channel="system",
             sender_id="subagent",
@@ -209,36 +192,36 @@ Summarize this naturally for the user. Keep it brief (1-2 sentences). Do not men
         logger.debug(f"Subagent [{task_id}] announced result to {origin['channel']}:{origin['chat_id']}")
     
     def _build_subagent_prompt(self, task: str) -> str:
-        """Build a focused system prompt for the subagent."""
+        """函数说明：_build_subagent_prompt。"""
         return f"""# Subagent
 
 You are a subagent spawned by the main agent to complete a specific task.
 
-## Your Task
+# 中文注释
 {task}
 
-## Rules
+# 中文注释
 1. Stay focused - complete only the assigned task, nothing else
 2. Your final response will be reported back to the main agent
 3. Do not initiate conversations or take on side tasks
 4. Be concise but informative in your findings
 
-## What You Can Do
+# 中文注释
 - Read and write files in the workspace
 - Execute shell commands
 - Search the web and fetch web pages
 - Complete the task thoroughly
 
-## What You Cannot Do
+# 中文注释
 - Send messages directly to users (no message tool available)
 - Spawn other subagents
 - Access the main agent's conversation history
 
-## Workspace
+# 中文注释
 Your workspace is at: {self.workspace}
 
 When you have completed the task, provide a clear summary of your findings or actions."""
     
     def get_running_count(self) -> int:
-        """Return the number of currently running subagents."""
+        """函数说明：get_running_count。"""
         return len(self._running_tasks)

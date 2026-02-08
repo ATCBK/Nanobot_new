@@ -1,5 +1,5 @@
 #!/bin/bash
-# Count core agent lines (excluding channels/, cli/, providers/ adapters)
+#计算核心代理线路（不包括通道/、cli/、提供商/适配器）
 cd "$(dirname "$0")" || exit 1
 
 echo "nanobot core agent line count"

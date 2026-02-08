@@ -1,4 +1,4 @@
-"""Cron service for scheduling agent tasks."""
+"""模块说明：service。"""
 
 import asyncio
 import json
@@ -17,14 +17,14 @@ def _now_ms() -> int:
 
 
 def _compute_next_run(schedule: CronSchedule, now_ms: int) -> int | None:
-    """Compute next run time in ms."""
+    """函数说明：_compute_next_run。"""
     if schedule.kind == "at":
         return schedule.at_ms if schedule.at_ms and schedule.at_ms > now_ms else None
     
     if schedule.kind == "every":
         if not schedule.every_ms or schedule.every_ms <= 0:
             return None
-        # Next interval from now
+        # 中文注释
         return now_ms + schedule.every_ms
     
     if schedule.kind == "cron" and schedule.expr:
@@ -40,7 +40,7 @@ def _compute_next_run(schedule: CronSchedule, now_ms: int) -> int | None:
 
 
 class CronService:
-    """Service for managing and executing scheduled jobs."""
+    """类说明：CronService。"""
     
     def __init__(
         self,
@@ -54,7 +54,7 @@ class CronService:
         self._running = False
     
     def _load_store(self) -> CronStore:
-        """Load jobs from disk."""
+        """函数说明：_load_store。"""
         if self._store:
             return self._store
         
@@ -101,7 +101,7 @@ class CronService:
         return self._store
     
     def _save_store(self) -> None:
-        """Save jobs to disk."""
+        """函数说明：_save_store。"""
         if not self._store:
             return
         
@@ -145,7 +145,7 @@ class CronService:
         self.store_path.write_text(json.dumps(data, indent=2))
     
     async def start(self) -> None:
-        """Start the cron service."""
+        """异步函数说明：start。"""
         self._running = True
         self._load_store()
         self._recompute_next_runs()
@@ -154,14 +154,14 @@ class CronService:
         logger.info(f"Cron service started with {len(self._store.jobs if self._store else [])} jobs")
     
     def stop(self) -> None:
-        """Stop the cron service."""
+        """函数说明：stop。"""
         self._running = False
         if self._timer_task:
             self._timer_task.cancel()
             self._timer_task = None
     
     def _recompute_next_runs(self) -> None:
-        """Recompute next run times for all enabled jobs."""
+        """函数说明：_recompute_next_runs。"""
         if not self._store:
             return
         now = _now_ms()
@@ -170,7 +170,7 @@ class CronService:
                 job.state.next_run_at_ms = _compute_next_run(job.schedule, now)
     
     def _get_next_wake_ms(self) -> int | None:
-        """Get the earliest next run time across all jobs."""
+        """函数说明：_get_next_wake_ms。"""
         if not self._store:
             return None
         times = [j.state.next_run_at_ms for j in self._store.jobs 
@@ -178,7 +178,7 @@ class CronService:
         return min(times) if times else None
     
     def _arm_timer(self) -> None:
-        """Schedule the next timer tick."""
+        """函数说明：_arm_timer。"""
         if self._timer_task:
             self._timer_task.cancel()
         
@@ -197,7 +197,7 @@ class CronService:
         self._timer_task = asyncio.create_task(tick())
     
     async def _on_timer(self) -> None:
-        """Handle timer tick - run due jobs."""
+        """异步函数说明：_on_timer。"""
         if not self._store:
             return
         
@@ -214,7 +214,7 @@ class CronService:
         self._arm_timer()
     
     async def _execute_job(self, job: CronJob) -> None:
-        """Execute a single job."""
+        """异步函数说明：_execute_job。"""
         start_ms = _now_ms()
         logger.info(f"Cron: executing job '{job.name}' ({job.id})")
         
@@ -235,7 +235,7 @@ class CronService:
         job.state.last_run_at_ms = start_ms
         job.updated_at_ms = _now_ms()
         
-        # Handle one-shot jobs
+        # 中文注释
         if job.schedule.kind == "at":
             if job.delete_after_run:
                 self._store.jobs = [j for j in self._store.jobs if j.id != job.id]
@@ -243,13 +243,13 @@ class CronService:
                 job.enabled = False
                 job.state.next_run_at_ms = None
         else:
-            # Compute next run
+            # 中文注释
             job.state.next_run_at_ms = _compute_next_run(job.schedule, _now_ms())
     
-    # ========== Public API ==========
+    # 中文注释
     
     def list_jobs(self, include_disabled: bool = False) -> list[CronJob]:
-        """List all jobs."""
+        """函数说明：list_jobs。"""
         store = self._load_store()
         jobs = store.jobs if include_disabled else [j for j in store.jobs if j.enabled]
         return sorted(jobs, key=lambda j: j.state.next_run_at_ms or float('inf'))
@@ -264,7 +264,7 @@ class CronService:
         to: str | None = None,
         delete_after_run: bool = False,
     ) -> CronJob:
-        """Add a new job."""
+        """函数说明：add_job。"""
         store = self._load_store()
         now = _now_ms()
         
@@ -294,7 +294,7 @@ class CronService:
         return job
     
     def remove_job(self, job_id: str) -> bool:
-        """Remove a job by ID."""
+        """函数说明：remove_job。"""
         store = self._load_store()
         before = len(store.jobs)
         store.jobs = [j for j in store.jobs if j.id != job_id]
@@ -308,7 +308,7 @@ class CronService:
         return removed
     
     def enable_job(self, job_id: str, enabled: bool = True) -> CronJob | None:
-        """Enable or disable a job."""
+        """函数说明：enable_job。"""
         store = self._load_store()
         for job in store.jobs:
             if job.id == job_id:
@@ -324,7 +324,7 @@ class CronService:
         return None
     
     async def run_job(self, job_id: str, force: bool = False) -> bool:
-        """Manually run a job."""
+        """异步函数说明：run_job。"""
         store = self._load_store()
         for job in store.jobs:
             if job.id == job_id:
@@ -337,7 +337,7 @@ class CronService:
         return False
     
     def status(self) -> dict:
-        """Get service status."""
+        """函数说明：status。"""
         store = self._load_store()
         return {
             "enabled": self._running,

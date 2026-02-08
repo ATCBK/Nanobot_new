@@ -1,4 +1,4 @@
-"""Spawn tool for creating background subagents."""
+"""模块说明：spawn。"""
 
 from typing import Any, TYPE_CHECKING
 
@@ -9,12 +9,7 @@ if TYPE_CHECKING:
 
 
 class SpawnTool(Tool):
-    """
-    Tool to spawn a subagent for background task execution.
-    
-    The subagent runs asynchronously and announces its result back
-    to the main agent when complete.
-    """
+    """类说明：SpawnTool。"""
     
     def __init__(self, manager: "SubagentManager"):
         self._manager = manager
@@ -22,7 +17,7 @@ class SpawnTool(Tool):
         self._origin_chat_id = "direct"
     
     def set_context(self, channel: str, chat_id: str) -> None:
-        """Set the origin context for subagent announcements."""
+        """函数说明：set_context。"""
         self._origin_channel = channel
         self._origin_chat_id = chat_id
     
@@ -56,7 +51,7 @@ class SpawnTool(Tool):
         }
     
     async def execute(self, task: str, label: str | None = None, **kwargs: Any) -> str:
-        """Spawn a subagent to execute the given task."""
+        """异步函数说明：execute。"""
         return await self._manager.spawn(
             task=task,
             label=label,
